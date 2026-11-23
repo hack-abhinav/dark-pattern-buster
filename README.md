@@ -12,7 +12,7 @@
 | **Team** | Dangling Pointers · RV College of Engineering, Bengaluru |
 | **Stage** | Ideathon: blueprint and execution plan |
 | **Pitch deck** | [Open the deck](https://docs.google.com/presentation/d/1eQIBH804qREIl9Vjo78zsTjLMRGb4w_3O2SxmFx4Rso/edit?usp=sharing) |
-| **Video pitch** | _add YouTube link_ |
+| **Video pitch** | [Watch the pitch](https://youtu.be/MxastKMiJvo) |
 
 ---
 
