@@ -151,9 +151,9 @@ RV College of Engineering, Bengaluru
 
 | # | Member |
 |---|---|
-| 1 | Abhinav |
-| 2 | Sharath Shivaraju |
-| 3 | Sanvi |
+| 1 | Sharath Shivaraju (Lead) |
+| 2 | Srirangam Abhinav |
+| 3 | Sanvi Banninthaya |
 | 4 | Yugandhara Mohite |
 
 ## Sources
