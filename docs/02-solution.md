@@ -39,7 +39,7 @@ The agent runs the same five steps on every checkout page.
 
 ## What the user sees
 
-The overlay is a narrow panel on the right of the checkout page (a design plan, not a prototype):
+The overlay is a narrow panel on the right of the checkout page. The prototype builds it in [extension/agent/overlay.js](../extension/agent/overlay.js):
 
 - **Header:** the site name and its Fairness Score
 - **Findings list:** one row per trick, with what it costs, a plain-English explanation and its CCPA tag. Each row has its own on/off switch, so you choose what gets fixed.

@@ -2,9 +2,13 @@
 
 [← 5. FlyCheapo demo](05-flycheapo-demo.md) · [Back to README](../README.md) · Next: [7. Business and impact →](07-business-and-impact.md)
 
-> All building happens at the offline hackathon on 1–2 December 2026. Before that, we only plan and prepare, as the ideathon's No-Code Rule requires.
+> The organisers withdrew the ideathon's No-Code Rule, so a working prototype is already in this repo. We keep improving it until Ideation Day, then harden and extend it at the offline hackathon on 1–2 December 2026.
 
-## Before hack day: planning only, no code
+## Before hack day
+
+**Already built (the prototype):** the extension agent with all 8 FlyCheapo traps, the Price Ledger, Fix it with verify and undo, voice and complaint draft; FlyCheapo with honest mode; and the FastAPI backend with tests. See [Run the prototype](../README.md#run-the-prototype).
+
+**Still to prepare:**
 
 - Finish this blueprint, the pitch deck and the video pitch.
 - Set up accounts and access: AWS (with credits), Amazon Bedrock model access (approval can take time, so we ask early), ElevenLabs (pick one English and one Hindi voice) and AWS Amplify.

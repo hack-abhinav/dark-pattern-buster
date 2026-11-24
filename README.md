@@ -3,14 +3,14 @@
 **An AI browser agent that catches checkout tricks, undoes them with your OK, and shows the honest price before you pay.**
 
 > [!IMPORTANT]
-> **Blueprint only: no code, no prototype.** This repository holds our plans and specs for the wHACKiest 2026 ideathon. The ideathon's No-Code Rule says no project code and no prototypes before hack day, so everything here is written documents. We will build the product at the 24-hour offline hackathon on 1–2 December 2026.
+> **Working MVP prototype.** The organisers withdrew the ideathon's No-Code Rule, so this repo now holds a basic working prototype alongside the plans: the Chrome extension agent, FlyCheapo (the fictional demo airline with 8 traps), and the AWS backend. It runs the full demo end to end on a laptop. We keep improving it until Ideation Day, and build the full product at the 24-hour offline hackathon on 1–2 December 2026. [Run it in 2 minutes ↓](#run-the-prototype)
 
 | | |
 |---|---|
 | **Event** | wHACKiest 2026 · CodeRIT, Ramaiah Institute of Technology |
 | **Track** | Track 2 – Beyond the Browser |
 | **Team** | Dangling Pointers · RV College of Engineering, Bengaluru |
-| **Stage** | Ideathon: blueprint and execution plan |
+| **Stage** | Ideathon: working MVP prototype and execution plan |
 | **Pitch deck** | [Open the deck](https://docs.google.com/presentation/d/1eQIBH804qREIl9Vjo78zsTjLMRGb4w_3O2SxmFx4Rso/edit?usp=sharing) |
 | **Video pitch** | [Watch the pitch](https://youtu.be/MxastKMiJvo) |
 
@@ -47,6 +47,12 @@ In practice: you shop normally → the agent scans each step → it flags and ex
 On the same journey it also flags the countdown that resets and the "only 2 seats left" claim (false urgency), the guilt-trip "No" button (confirm shaming), the tiny grey skip link (interface interference) and the confusing double-negative checkbox (trick question).
 
 The overlay's **Honest Price card** then reads: Advertised ₹4,999 · About to pay ₹5,846 · After fix ₹5,198 · **You save ₹648**.
+
+This is the prototype running on FlyCheapo's payment page, before and after one tap on **Fix it**:
+
+| Before: 4 tricks flagged, ₹5,846 | After: the site's own total confirms ₹5,198 |
+|---|---|
+| ![Payment page before Fix it](docs/images/payment-before-fix.jpg) | ![Payment page after Fix it](docs/images/payment-after-fix.jpg) |
 
 ### Key features
 
@@ -85,14 +91,58 @@ Full technical blueprint: [docs/03-architecture.md](docs/03-architecture.md) · 
 
 | Layer | Tools / libraries / APIs | Why we picked it |
 |---|---|---|
-| Frontend / agent | Chrome Extension (Manifest V3), TypeScript, React overlay, MutationObserver | Runs inside the user's own browser, so sites can't block it as a bot |
+| Frontend / agent | Chrome Extension (Manifest V3), MutationObserver, shadow-DOM overlay. The prototype is plain JavaScript with no build step; we move it to TypeScript + React on hack day | Runs inside the user's own browser, so sites can't block it as a bot |
 | Detection rules | JavaScript heuristics: pre-ticked inputs, timer resets, price jumps, hidden text | Fast, free and works offline for the common traps |
-| AI / ML | Amazon Bedrock (multimodal model) | Reads button wording and screenshots to catch guilt-trips and disguised options |
+| AI / ML | Claude on Amazon Bedrock (prototype default: Claude Opus 5.5, set by `BEDROCK_MODEL_ID`) | Reads button wording (and, later, screenshots) to catch guilt-trips and double negatives |
 | Backend | FastAPI (Python) on AWS Lambda + API Gateway | Serverless and near-zero cost at hackathon scale |
 | Database / storage | Amazon DynamoDB, Amazon S3 | Price Ledger and site Fairness Scores; evidence screenshots |
 | Voice | ElevenLabs text-to-speech | Spoken warnings in English and Hindi |
 | Hosting | AWS Amplify (demo site in React + Vite) | One-step deploy of the FlyCheapo demo site |
 | Hardware | None | Runs on any laptop with Chrome |
+
+## Run the prototype
+
+You need Google Chrome and Python 3.9 or newer. Nothing to build or install for the extension or the demo site.
+
+**1. Start the FlyCheapo demo site** (from the repo folder):
+
+```bash
+python3 -m http.server 8080
+```
+
+**2. Load the extension:** open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the `extension/` folder.
+
+**3. Book a flight:** open <http://localhost:8080/demo-site/> and go through search → seat → add-ons → payment. The agent's panel appears on the right. Reload the search page once to catch the fake timer. On the payment page, tap **Fix it**: ₹5,846 drops to ₹5,198. Use **Demo controls** (bottom left) to switch to honest mode or turn single traps on and off.
+
+**4. Optional: the AI backend.** Rules alone catch 6 of the 8 traps. For the other two (guilt-trip wording and the double-negative checkbox), run the backend:
+
+```bash
+cd backend && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+```
+
+```bash
+cd backend && .venv/bin/uvicorn app.main:app --port 8000
+```
+
+With AWS credentials and Bedrock access it asks Claude on Amazon Bedrock; without them it uses a small local fallback and says so in the panel. Set `ELEVENLABS_API_KEY` for spoken alerts; without it the browser's own voice reads them. Deploy to AWS with `sam build && sam deploy --guided` (see [backend/template.yaml](backend/template.yaml)), then paste the API URL into the extension's popup.
+
+**No extension?** Open <http://localhost:8080/demo-site/?agent=preview> to run the same agent inside the demo page.
+
+**Tests:** `cd backend && .venv/bin/python -m pytest` (8 tests).
+
+### What the prototype does today
+
+| Part | Status |
+|---|---|
+| Detection on FlyCheapo | ✅ All 8 traps flagged with their CCPA names (6 by rules, 2 by the AI check) |
+| Honest mode | ✅ Zero findings on all four pages |
+| Price Ledger + Honest Price card | ✅ Tracks every price line across steps; ₹5,846 → ₹5,198 |
+| Fix it + verify + undo | ✅ Uses the page's own controls, then checks the site's own total |
+| Voice alerts | ✅ English and Hindi (ElevenLabs through the backend, browser voice as fallback) |
+| Complaint draft + evidence | ✅ Draft text, anonymised ledger download, screenshot in the extension |
+| Read-only check on any site | ✅ From the extension's popup; changes nothing |
+| AWS deployment | Template ready ([backend/template.yaml](backend/template.yaml)), not yet deployed |
+| Real-site testing, TypeScript + React port, Chrome side panel | Next, before and on hack day |
 
 ## Why it's new
 
@@ -111,7 +161,7 @@ India has already put real effort into spotting dark patterns. The Department of
 
 ## Hack-day plan: the MVP in 24 hours
 
-What we will build on 1–2 December:
+The prototype in this repo already covers the core of this list. On 1–2 December we harden and extend it:
 
 - A Chrome extension with an overlay panel
 - **FlyCheapo**, a clearly fictional airline site with 8 built-in traps, plus an "honest mode" with none to test for false alarms
@@ -135,8 +185,11 @@ Details: [docs/07-business-and-impact.md](docs/07-business-and-impact.md)
 
 ## What's in this repo
 
-| File | What's inside |
+| Path | What's inside |
 |---|---|
+| [extension/](extension/) | The Chrome extension. `agent/` holds the agent: page snapshot, rule engine, Price Ledger, AI checks, Fix it, overlay |
+| [demo-site/](demo-site/) | FlyCheapo, the fictional airline with 8 switchable traps and an honest mode |
+| [backend/](backend/) | FastAPI for AWS Lambda: Bedrock checks, ElevenLabs voice, DynamoDB and S3, SAM template, tests |
 | [docs/01-problem.md](docs/01-problem.md) | The problem, survey numbers, Indian rules and gaps in today's options |
 | [docs/02-solution.md](docs/02-solution.md) | Features, user flow, overlay design and design principles |
 | [docs/03-architecture.md](docs/03-architecture.md) | Components, data flow, data we store, privacy and sponsor tech |

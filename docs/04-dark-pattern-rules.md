@@ -24,6 +24,8 @@
 
 **Hack-day MVP:** 6 patterns (1, 2, 3, 6, 8, 11) through FlyCheapo's 8 traps. **Stretch:** bait and switch and nagging, for 8 patterns.
 
+The prototype already implements the six MVP patterns: rules in [extension/agent/rules.js](../extension/agent/rules.js), AI checks in [backend/app/analysis.py](../backend/app/analysis.py).
+
 ## The six MVP patterns in detail
 
 ### 1. False urgency

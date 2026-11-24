@@ -2,7 +2,7 @@
 
 [← 4. Detection rulebook](04-dark-pattern-rules.md) · [Back to README](../README.md) · Next: [6. Hack-day plan →](06-hack-day-plan.md)
 
-> **FlyCheapo is a clearly fictional airline.** We'll build it on hack day only to show the agent working end to end. It is not a real company, every fare is made up, and no real booking or payment ever happens. Every page will say so in its footer.
+> **FlyCheapo is a clearly fictional airline.** It's in [demo-site/](../demo-site/), built only to show the agent working end to end. It is not a real company, every fare is made up, and no real booking or payment ever happens. Every page will say so in its footer.
 
 ## Why we need a demo site
 
@@ -55,9 +55,10 @@ On a second visit, the backend already knows FlyCheapo adds a ₹199 fee at paym
 - **Honest mode:** the same four pages with no traps. Add-ons start unticked, the fee is shown on the search page, and there's no timer. The agent should find nothing.
 - **Trap switches:** each of the 8 traps can be turned on or off, so we can test them one at a time and show judges any single trap on request.
 
-## Build notes (for hack day)
+## Build notes
 
-- React + Vite, hosted on AWS Amplify at a public link so judges can try it themselves.
+- The prototype is static HTML and plain JavaScript (no build step): serve the repo folder with `python3 -m http.server 8080` and open `/demo-site/`. On hack day we host it on AWS Amplify at a public link so judges can try it themselves.
+- Demo controls (bottom left) switch honest mode and each trap on or off. `?agent=preview` runs the agent inside the page for anyone without the extension.
 - Fake data only: no accounts, no real payments, no personal data collected.
 - A "fictional demo" notice on every page.
 - Owned by workstream 4 in the [hack-day plan](06-hack-day-plan.md).

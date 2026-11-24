@@ -2,7 +2,7 @@
 
 [← 2. Solution](02-solution.md) · [Back to README](../README.md) · Next: [4. Detection rulebook →](04-dark-pattern-rules.md)
 
-> A Chrome extension in the user's own browser does the watching and fixing. A small serverless AWS backend adds AI checks, storage and voice. This page is a plan for hack day: nothing here is built yet.
+> A Chrome extension in the user's own browser does the watching and fixing. A small serverless AWS backend adds AI checks, storage and voice. The prototype in this repo builds most of it: see [What the prototype builds](#what-the-prototype-builds) at the end.
 
 **Data flow:** checkout page → content script → rule engine → (only if unsure) API Gateway → Lambda → Bedrock → overlay → you tap "Fix it" → fixes applied → site total re-read → Price Ledger + voice alert.
 
@@ -10,17 +10,17 @@
 
 | Component | Runs where | Its job | Built with |
 |---|---|---|---|
-| **Content script** | Inside the checkout tab | Reads each step, watches for changes, applies approved fixes, draws small highlights next to each trick | TypeScript, MutationObserver |
+| **Content script** | Inside the checkout tab | Reads each step, watches for changes, applies approved fixes, draws small highlights next to each trick | MutationObserver; plain JavaScript in the prototype, TypeScript on hack day |
 | **Rule engine** | In the browser | Instant checks for the common traps | JavaScript heuristics |
-| **Overlay panel** | In the browser (Chrome's side panel, which the website can't hide or restyle) | Findings, "Fix it", Honest Price card, voice and complaint buttons | React |
+| **Overlay panel** | In the browser (prototype: a panel in a closed shadow root that the site's CSS can't restyle; planned: Chrome's side panel, which the website can't hide) | Findings, "Fix it", Honest Price card, voice and complaint buttons | Plain JavaScript in the prototype, React on hack day |
 | **Background service worker** | In the browser | Keeps the Price Ledger for the session and talks to the backend | Chrome Extension Manifest V3 |
 | **API Gateway** | AWS | One HTTPS entry point, with rate limits | Amazon API Gateway |
 | **Analysis service** | AWS | Sends uncertain elements to the AI, calls ElevenLabs, updates scores | FastAPI (Python) on AWS Lambda |
-| **AI model** | AWS | Reads wording and small images for subtle patterns | A fast multimodal model on Amazon Bedrock (picked on hack day for speed and cost) |
+| **AI model** | AWS | Reads wording (and, later, small images) for subtle patterns | Claude on Amazon Bedrock; the prototype defaults to Claude Opus 5.5 at low effort, set by `BEDROCK_MODEL_ID` |
 | **Price Ledger and site profiles** | AWS | Anonymised price lines per step; Fairness Score and the fees each site usually adds late | Amazon DynamoDB |
 | **Evidence store** | AWS | Cropped screenshots for complaints, only when the user asks | Amazon S3 (private, auto-deleted after 30 days) |
 | **Voice** | ElevenLabs | Speaks alerts and the final saving in English and Hindi | ElevenLabs text-to-speech |
-| **Demo site** | AWS | FlyCheapo, the fictional airline with 8 traps | React + Vite on AWS Amplify |
+| **Demo site** | AWS | FlyCheapo, the fictional airline with 8 traps | Static HTML and JavaScript in the prototype; hosted on AWS Amplify |
 
 ## What happens on one checkout page
 
@@ -164,5 +164,20 @@ These are targets for hack day, not measurements.
 ## Why a browser extension
 
 A server-side bot would be blocked, would need the user's login, and would see a different page from the user. An extension runs as the user, in their own browser, on exactly the page they see, so sites can't block it as a bot and no passwords are shared.
+
+## What the prototype builds
+
+| Part | Where | Status |
+|---|---|---|
+| Page snapshot (never reads payment or free-text fields) | [extension/agent/snapshot.js](../extension/agent/snapshot.js), [core.js](../extension/agent/core.js) | ✅ |
+| Rule engine for all 8 FlyCheapo traps | [extension/agent/rules.js](../extension/agent/rules.js) | ✅ |
+| Price Ledger across steps, Fairness Score, site memory | [extension/agent/ledger.js](../extension/agent/ledger.js) | ✅ |
+| AI checks with "couldn't check" when offline | [extension/agent/ai.js](../extension/agent/ai.js), [backend/app/analysis.py](../backend/app/analysis.py) | ✅ (local fallback without AWS) |
+| Fix it, verify against the site's total, one-tap undo | [extension/agent/fixer.js](../extension/agent/fixer.js) | ✅ |
+| Overlay, Honest Price card, highlights, voice, complaint draft | [extension/agent/overlay.js](../extension/agent/overlay.js) | ✅ |
+| Background worker, read-only check from the popup | [extension/background.js](../extension/background.js), [popup.js](../extension/popup.js) | ✅ |
+| Analyse, Site info, Speak, Ledger summary, Evidence | [backend/app/main.py](../backend/app/main.py) | ✅ (8 tests) |
+| API Gateway, Lambda, DynamoDB, S3 with 30-day expiry | [backend/template.yaml](../backend/template.yaml) | Template ready, not yet deployed |
+| Cropped-image AI checks, Chrome side panel, TypeScript + React | – | Hack day |
 
 Next: the full [detection rulebook →](04-dark-pattern-rules.md)
