@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Dark Pattern Buster</title>
+  <style>
+    body { width: 300px; margin: 0; font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #14213d; }
+    header { background: #14213d; color: #fff; padding: 12px 14px; display: flex; gap: 10px; align-items: center; }
+    .logo { width: 30px; height: 30px; border-radius: 9px; background: #f26b1d; display: grid; place-items: center; font-weight: 900; font-size: 11px; }
+    main { padding: 12px 14px; display: grid; gap: 10px; }
+    p { margin: 0; color: #5b6475; }
+    button { border: 0; border-radius: 9px; padding: 9px 12px; font: inherit; font-weight: 700; cursor: pointer; }
+    .primary { background: #16a34a; color: #fff; }
+    .secondary { background: #eef0f5; color: #14213d; }
+    label { display: grid; gap: 4px; font-weight: 600; }
+    input, select { font: inherit; padding: 6px 8px; border: 1px solid #d6dae3; border-radius: 7px; }
+    #status, #health { font-size: 12px; }
+    .ok { color: #15803d; }
+    .warn { color: #b45309; }
+    footer { padding: 8px 14px 12px; font-size: 11.5px; color: #5b6475; border-top: 1px solid #eef0f5; }
+  </style>
+</head>
+<body>
+  <header><div class="logo">DPB</div><b>Dark Pattern Buster</b></header>
+  <main>
+    <p>Runs by itself on the FlyCheapo demo. On any other checkout, run a read-only check: it flags tricks and changes nothing.</p>
+    <button class="primary" id="check">Check this page (read-only)</button>
+    <div id="status"></div>
+    <label>AI backend URL
+      <input id="backend" placeholder="http://localhost:8000">
+    </label>
+    <label>Voice language
+      <select id="lang"><option value="en">English</option><option value="hi">Hindi</option></select>
+    </label>
+    <button class="secondary" id="save">Save settings</button>
+    <div id="health"></div>
+  </main>
+  <footer><b>Never pays for you.</b> Never reads card, UPI, OTP or password fields.</footer>
+  <script src="popup.js"></script>
+</body>
+</html>

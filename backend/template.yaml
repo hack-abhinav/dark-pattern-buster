@@ -1,0 +1,121 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Dark Pattern Buster backend: API Gateway → Lambda (FastAPI) → Amazon Bedrock,
+  DynamoDB (Price Ledger, site profiles) and S3 (evidence, deleted after 30 days).
+  Deploy with: sam build && sam deploy --guided
+
+Parameters:
+  BedrockModelId:
+    Type: String
+    Default: anthropic.claude-opus-5-5
+    Description: Claude model on Amazon Bedrock used for the AI checks.
+  ElevenLabsApiKey:
+    Type: String
+    NoEcho: true
+    Default: ""
+    Description: ElevenLabs API key for spoken alerts. Leave empty to use the browser's own voice.
+  ElevenLabsVoiceIdEn:
+    Type: String
+    Default: ""
+  ElevenLabsVoiceIdHi:
+    Type: String
+    Default: ""
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Timeout: 30
+    MemorySize: 512
+    Architectures: [arm64]
+
+Resources:
+  Api:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins: ["*"]
+        AllowMethods: [GET, POST]
+        AllowHeaders: [content-type]
+      DefaultRouteSettings:
+        # Rate limits protect the backend and the free-tier budget.
+        ThrottlingBurstLimit: 20
+        ThrottlingRateLimit: 10
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: app.lambda_handler.handler
+      Environment:
+        Variables:
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+          ELEVENLABS_API_KEY: !Ref ElevenLabsApiKey
+          ELEVENLABS_VOICE_ID_EN: !Ref ElevenLabsVoiceIdEn
+          ELEVENLABS_VOICE_ID_HI: !Ref ElevenLabsVoiceIdHi
+          SITE_TABLE: !Ref SiteProfiles
+          LEDGER_TABLE: !Ref LedgerLines
+          EVIDENCE_BUCKET: !Ref EvidenceBucket
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SiteProfiles
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LedgerLines
+        - S3CrudPolicy:
+            BucketName: !Ref EvidenceBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+                - bedrock-mantle:*
+              Resource: "*"
+      Events:
+        Proxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref Api
+            Path: /{proxy+}
+            Method: ANY
+
+  SiteProfiles:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: site, AttributeType: S }
+      KeySchema:
+        - { AttributeName: site, KeyType: HASH }
+
+  LedgerLines:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: session, AttributeType: S }
+        - { AttributeName: line, AttributeType: S }
+      KeySchema:
+        - { AttributeName: session, KeyType: HASH }
+        - { AttributeName: line, KeyType: RANGE }
+
+  EvidenceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      LifecycleConfiguration:
+        Rules:
+          - Id: delete-evidence-after-30-days
+            Status: Enabled
+            ExpirationInDays: 30
+
+Outputs:
+  ApiUrl:
+    Description: Paste this into the extension's popup as the backend URL.
+    Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com"

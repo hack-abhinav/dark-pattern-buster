@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Dark Pattern Buster",
+  "version": "0.1.0",
+  "description": "Catches checkout dark patterns, undoes them with your OK, and shows the honest price before you pay.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Dark Pattern Buster",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": [
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "https://*.execute-api.amazonaws.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost/demo-site/*",
+        "http://127.0.0.1/demo-site/*",
+        "https://hack-abhinav.github.io/dark-pattern-buster/demo-site/*"
+      ],
+      "js": [
+        "agent/core.js",
+        "agent/snapshot.js",
+        "agent/ledger.js",
+        "agent/rules.js",
+        "agent/ai.js",
+        "agent/fixer.js",
+        "agent/overlay.js",
+        "agent/main.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
