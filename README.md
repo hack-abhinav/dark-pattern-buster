@@ -13,6 +13,7 @@
 | **Stage** | Ideathon: working MVP prototype and execution plan |
 | **Pitch deck** | [Open the deck](https://docs.google.com/presentation/d/1eQIBH804qREIl9Vjo78zsTjLMRGb4w_3O2SxmFx4Rso/edit?usp=sharing) |
 | **Video pitch** | [Watch the pitch](https://youtu.be/MxastKMiJvo) |
+| **Live demo** | [Try FlyCheapo with the agent](https://hack-abhinav.github.io/dark-pattern-buster/demo-site/?mode=traps&agent=preview) (no install; AI checks need the backend) |
 
 ---
 
@@ -126,7 +127,7 @@ cd backend && .venv/bin/uvicorn app.main:app --port 8000
 
 With AWS credentials and Bedrock access it asks Claude on Amazon Bedrock; without them it uses a small local fallback and says so in the panel. Set `ELEVENLABS_API_KEY` for spoken alerts; without it the browser's own voice reads them. Deploy to AWS with `sam build && sam deploy --guided` (see [backend/template.yaml](backend/template.yaml)), then paste the API URL into the extension's popup.
 
-**No extension?** Open <http://localhost:8080/demo-site/?agent=preview> to run the same agent inside the demo page.
+**No extension?** Open <http://localhost:8080/demo-site/?agent=preview> to run the same agent inside the demo page, or use the hosted copy: <https://hack-abhinav.github.io/dark-pattern-buster/demo-site/?mode=traps&agent=preview>. The hosted copy can't reach a backend on your laptop, so the two AI-checked traps show as "couldn't check" there.
 
 **Tests:** `cd backend && .venv/bin/python -m pytest` (8 tests).
 
