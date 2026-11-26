@@ -45,6 +45,7 @@
     const found = DPB.rules.run(snap, DPB.state.session);
     DPB.state.findings = DPB.ai.resolve(found, rescan);
     DPB.ledger.recordFindings(DPB.state.findings);
+    DPB.state.forecast = snap.summary ? null : DPB.ledger.forecast();
     if (snap.step === 'Done') await DPB.ledger.finish();
     DPB.overlay.render();
   }

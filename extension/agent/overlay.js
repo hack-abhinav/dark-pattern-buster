@@ -18,6 +18,7 @@
   let layer = null; // highlights
   let panel = null;
   const markers = new Map(); // finding id → marker elements
+  let forecastTags = []; // [{ card, tag }] price tags on listing pages
   const ui = { collapsed: false, complaint: false, busy: false, message: null };
   let onFix = null;
   let onUndo = null;
@@ -108,6 +109,13 @@
       background: #14213d; color: #fff; font: 700 14px/1 system-ui, sans-serif; box-shadow: 0 10px 30px rgba(20,33,61,.35); }
     .bubble span { background: #e11d48; border-radius: 999px; padding: 2px 7px; margin-left: 6px; }
     .bubble[hidden] { display: none; }
+    .ftag { position: fixed; padding: 5px 9px; border-radius: 8px; background: #14213d; color: #fff; font: 600 12px/1.35 system-ui, sans-serif;
+      white-space: nowrap; box-shadow: 0 4px 12px rgba(20,33,61,.3); }
+    .ftag b { color: #fca5a5; }
+    .ftag i { font-style: normal; color: #86efac; font-weight: 800; }
+    .forecast ul { gap: 4px; }
+    .forecast li { display: block; border: 0; border-left: 0; padding: 0; cursor: default; font-size: 12.5px; }
+    .forecast li b { color: #e11d48; }
   `;
 
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -258,6 +266,7 @@
       </header>
       <div class="body">
         ${DPB.state.readOnly ? '<div class="banner"><b>Read-only check.</b> Nothing on this page will be changed.</div>' : ''}
+        ${forecastHTML()}
         ${!P.isExtension ? '<div class="banner"><b>Preview mode:</b> the agent is running inside this demo page. Install the Chrome extension to use it on any site.</div>' : ''}
         ${ui.message ? `<p class="msg">${esc(ui.message)}</p>` : ''}
         <section class="card" aria-label="Honest Price">
@@ -300,7 +309,55 @@
       if (body) body.scrollTop = scroll;
     }
     renderMarkers(cur);
+    renderForecastTags();
   };
+
+  // ---------------------------------------------------------------------------
+  // Price forecast on listing pages: the real price at checkout, before you pick
+  // ---------------------------------------------------------------------------
+
+  function forecastHTML() {
+    const fc = DPB.state.forecast;
+    const snap = DPB.state.snapshot || {};
+    if (!fc || snap.summary) return '';
+    const p = fc.profile;
+    if (!p || (!p.lateFees.length && !p.sneaked.length)) {
+      return snap.step === 'Search'
+        ? `<section class="card forecast"><h3>Real price at checkout</h3><p class="note">No checkout seen on this site yet. After one checkout (yours, or other users' once the shared backend is on), each result here shows what it really costs.</p></section>`
+        : '';
+    }
+    const items = p.lateFees.map((f) => `<li><b>+${money(f.amount)}</b> ${esc(f.label.toLowerCase())}: added at payment, can't be removed</li>`)
+      .concat(p.sneaked.map((f) => `<li><b>+${money(f.amount)}</b> ${esc(f.label)}: pre-selected for you, removable</li>`));
+    const first = fc.cards[0];
+    return `
+      <section class="card forecast" aria-label="Real price at checkout">
+        <h3>Real price at checkout</h3>
+        <p class="note" style="margin:0 0 6px">Learned from ${p.checkouts} earlier checkout${p.checkouts === 1 ? '' : 's'} (${esc(p.source)}), this site adds:</p>
+        <ul>${items.join('')}</ul>
+        ${first ? `<p class="note">Each result now shows its price at checkout and its honest price. For example ${money(first.advertised)} becomes <b>${money(first.checkout)}</b> at checkout; <b>${money(first.honest)}</b> once you remove the extras.</p>` : ''}
+      </section>`;
+  }
+
+  function renderForecastTags() {
+    const cards = (DPB.state.forecast && DPB.state.forecast.cards) || [];
+    forecastTags.forEach((t) => t.tag.remove());
+    forecastTags = cards.filter((c) => c.priceEl && c.priceEl.isConnected).map((card) => {
+      const tag = document.createElement('div');
+      tag.className = 'ftag';
+      tag.innerHTML = `At checkout <b>${money(card.checkout)}</b> · Honest <i>${money(card.honest)}</i>`;
+      layer.append(tag);
+      return { card, tag };
+    });
+    positionForecastTags();
+  }
+
+  function positionForecastTags() {
+    for (const { card, tag } of forecastTags) {
+      const r = card.priceEl.getBoundingClientRect();
+      const w = tag.offsetWidth || 200;
+      Object.assign(tag.style, { left: Math.max(8, r.right - w) + 'px', top: r.top - 30 + 'px' });
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Highlights next to each trick
@@ -362,6 +419,7 @@
   }
 
   function positionMarkers() {
+    positionForecastTags();
     for (const m of markers.values()) {
       const a = m.f.anchor;
       if (!a || !a.isConnected) continue;

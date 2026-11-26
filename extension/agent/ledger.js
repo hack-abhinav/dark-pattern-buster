@@ -178,16 +178,42 @@
     const local = await P.get('local', 'site:' + location.host);
     const res = await P.backend('/site-info?site=' + encodeURIComponent(location.host), { method: 'GET', timeout: 2500 });
     const remote = res && res.data ? res.data : null;
-    const lateFees = {};
-    [local, remote].forEach((p) => (p && p.late_fees ? p.late_fees : []).forEach((f) => { lateFees[U.key(f.label)] = f; }));
+    const merge = (field) => {
+      const out = {};
+      [local, remote].forEach((p) => (p && p[field] ? p[field] : []).forEach((f) => { out[U.key(f.label)] = f; }));
+      return Object.values(out);
+    };
     if (!local && !remote) return null;
     return {
       fairness: remote && remote.checkouts ? remote.fairness_score : local ? local.fairness_score : null,
-      checkouts: (remote && remote.checkouts) || (local && local.checkouts) || 0,
-      lateFees: Object.values(lateFees),
+      checkouts: Math.max((remote && remote.checkouts) || 0, (local && local.checkouts) || 0),
+      lateFees: merge('late_fees'), // compulsory fees shown only at a later step
+      sneaked: merge('sneaked_extras'), // paid extras the site pre-selects (removable)
       source: remote && remote.checkouts ? 'backend' : 'this browser'
     };
   }
+
+  // On a listing page, before anything is picked: what each product will really cost at checkout,
+  // using what earlier checkouts on this site taught us (this browser, or every user via the backend).
+  const PICK_RE = /^(select|book|book now|choose|choose fare|view deal|continue)$/i;
+  L.forecast = function () {
+    const p = L.siteProfile;
+    if (!p || (!p.lateFees.length && !p.sneaked.length)) return { cards: [], profile: p };
+    const buttons = Array.from(document.querySelectorAll('button, a[href], [role="button"], input[type="submit"]'))
+      .filter((b) => !U.isOurs(b) && !U.inPaymentArea(b) && U.visible(b) && PICK_RE.test((b.innerText || b.value || '').trim()));
+    const seen = new Set();
+    const cards = [];
+    for (const b of buttons) {
+      const c = DPB.snapshot.cardAround(b);
+      if (!c || seen.has(c.el)) continue;
+      seen.add(c.el);
+      const shown = new Set(c.fees.map((f) => f.key));
+      const late = p.lateFees.filter((f) => !shown.has(U.key(f.label))).reduce((sum, f) => sum + f.amount, 0);
+      const extras = p.sneaked.reduce((sum, f) => sum + f.amount, 0);
+      cards.push({ el: c.el, priceEl: c.priceEl, advertised: c.advertised, honest: c.advertised + late, checkout: c.advertised + late + extras });
+    }
+    return { cards, profile: p };
+  };
 
   // The checkout ended: keep what we learned about this site, and send an anonymised summary.
   L.finish = async function () {
@@ -196,13 +222,16 @@
     const findings = Object.values(session.findings);
     const lateFees = findings.filter((f) => f.pattern === 'drip_pricing' && f.itemLabel)
       .map((f) => ({ label: f.itemLabel, amount: f.cost }));
+    const sneaked = findings.filter((f) => f.pattern === 'basket_sneaking' && f.cost > 0)
+      .map((f) => ({ label: f.itemLabel || f.title, amount: f.cost }));
     const fairness = DPB.fairness(findings);
     const prev = (await P.get('local', 'site:' + location.host)) || { checkouts: 0 };
     await P.set('local', 'site:' + location.host, {
       site: location.host,
       checkouts: (prev.checkouts || 0) + 1,
       fairness_score: fairness,
-      late_fees: lateFees.length ? lateFees : prev.late_fees || []
+      late_fees: lateFees.length ? lateFees : prev.late_fees || [],
+      sneaked_extras: sneaked.length ? sneaked : prev.sneaked_extras || []
     });
     // Anonymised: no names, no booking IDs, no payment details. Just price lines and findings.
     P.backend('/ledger-summary', {

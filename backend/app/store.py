@@ -56,7 +56,7 @@ def _to_dynamo(value):
 
 
 def empty_profile(site: str) -> dict:
-    return {"site": site, "checkouts": 0, "tricks_seen": {}, "average_extra": 0, "late_fees": [], "fairness_score": None, "updated": None}
+    return {"site": site, "checkouts": 0, "tricks_seen": {}, "average_extra": 0, "late_fees": [], "sneaked_extras": [], "fairness_score": None, "updated": None}
 
 
 def fairness_score(findings: List[dict]) -> int:
@@ -102,11 +102,18 @@ def apply_summary(summary: dict) -> dict:
     for fee in summary.get("late_fees") or []:
         late[fee["label"].lower()] = {"label": fee["label"], "amount": fee["amount"]}
 
+    # Paid extras the site pre-selected, so the extension can warn on the listing page next time.
+    sneaked = {fee["label"].lower(): fee for fee in (profile.get("sneaked_extras") or [])}
+    for f in findings:
+        if f["pattern"] == "basket_sneaking" and f.get("item") and (f.get("cost") or 0) > 0:
+            sneaked[f["item"].lower()] = {"label": f["item"], "amount": f["cost"]}
+
     profile.update({
         "checkouts": n + 1,
         "tricks_seen": tricks,
         "average_extra": round(((profile.get("average_extra") or 0) * n + extra) / (n + 1)),
         "late_fees": list(late.values()),
+        "sneaked_extras": list(sneaked.values()),
         "fairness_score": score if profile.get("fairness_score") is None else round((profile["fairness_score"] * n + score) / (n + 1)),
         "updated": int(time.time()),
     })

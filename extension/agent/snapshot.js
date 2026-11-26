@@ -167,6 +167,7 @@
       if (nodes.length) {
         if (nodes.length > 6) return null;
         const parts = nodes.map((n) => ({
+          node: n,
           amount: U.amounts(n.nodeValue)[0],
           label: U.stripMoney(U.text(n.parentElement, true)),
           font: parseFloat(getComputedStyle(n.parentElement).fontSize) || 0
@@ -175,7 +176,7 @@
         const main = parts.reduce((a, b) => (b.font > a.font ? b : a));
         const fees = parts.filter((p) => p !== main && p.label && !TOTAL_RE.test(p.label) && p.amount < main.amount)
           .map((p) => ({ label: p.label, key: U.key(p.label), amount: p.amount }));
-        return { advertised: main.amount, fees, text: U.short(U.text(card, true), 80) };
+        return { el: card, priceEl: main.node.parentElement, advertised: main.amount, fees, text: U.short(U.text(card, true), 80) };
       }
       card = card.parentElement;
     }

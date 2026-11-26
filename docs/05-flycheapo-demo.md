@@ -48,7 +48,9 @@ The payment form is fake: pressing Pay only shows a "Demo only, no payment taken
 
 The arithmetic: ₹4,999 + ₹349 + ₹299 + ₹199 = ₹5,846. Fix it removes ₹349 + ₹299 = ₹648, which leaves ₹4,999 + ₹199 = ₹5,198.
 
-On a second visit, the backend already knows FlyCheapo adds a ₹199 fee at payment, so the Honest Price card shows ₹5,198 from the search page onward.
+On a second visit, the agent already knows FlyCheapo adds a ₹199 fee at payment and pre-selects a ₹349 seat and ₹299 insurance. So on the search page, before anything is picked, every flight shows its real price: FC 214 reads "At checkout ₹5,846 · Honest ₹5,198". On a first visit nobody can know the hidden fee yet, so the panel says so instead of guessing. Once the shared backend is deployed, one user's checkout teaches it for everyone.
+
+![Search page with the real price on every flight](images/search-forecast.jpg)
 
 ## Honest mode and trap switches
 

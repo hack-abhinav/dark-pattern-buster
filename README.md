@@ -61,6 +61,7 @@ This is the prototype running on FlyCheapo's payment page, before and after one 
 - **Price Ledger:** tracks every rupee added between checkout steps, so late fees and sneaked extras can't hide.
 - **One-tap "Fix it":** unticks add-ons, picks the free seat and declines extras, only after you tap.
 - **Honest Price card:** advertised vs about-to-pay vs fixed price, checked against the site's own total.
+- **Real price before you pick:** once a site's hidden fees and pre-selected extras are known (from your earlier checkout, or other users' through the backend), every result on the listing page shows its price at checkout and its honest price.
 - **Voice alerts (ElevenLabs):** spoken warnings in English and Hindi for elderly and low-vision users.
 - **Complaint draft:** prepares a complaint for the National Consumer Helpline (1915), with the evidence attached.
 - **Never pays for you:** the agent never types payment details and never presses Pay.
@@ -138,6 +139,7 @@ With AWS credentials and Bedrock access it asks Claude on Amazon Bedrock; withou
 | Detection on FlyCheapo | ✅ All 8 traps flagged with their CCPA names (6 by rules, 2 by the AI check) |
 | Honest mode | ✅ Zero findings on all four pages |
 | Price Ledger + Honest Price card | ✅ Tracks every price line across steps; ₹5,846 → ₹5,198 |
+| Real price on the flight list | ✅ After one checkout, each flight shows "At checkout ₹5,846 · Honest ₹5,198" before you pick ([screenshot](docs/images/search-forecast.jpg)) |
 | Fix it + verify + undo | ✅ Uses the page's own controls, then checks the site's own total |
 | Voice alerts | ✅ English and Hindi (ElevenLabs through the backend, browser voice as fallback) |
 | Complaint draft + evidence | ✅ Draft text, anonymised ledger download, screenshot in the extension |

@@ -35,6 +35,7 @@ The agent runs the same five steps on every checkout page.
 | **Honest Price card** | Shows advertised price, about-to-pay price and fixed price, plus the saving | One honest number before you pay |
 | **Voice alerts** | ElevenLabs reads alerts and the final saving aloud, in English and Hindi | Helps elderly, low-vision and first-time users |
 | **Complaint draft** | Prepares a complaint for the National Consumer Helpline (1915), with the ledger and screenshots attached | Makes it easy to report a site |
+| **Real price before you pick** | On a listing page, shows each result's price at checkout and honest price, using fees and pre-selected extras learned from earlier checkouts on that site | The surprise is gone before you even choose |
 | **Fairness Score** | A simple score per site, built from the tricks found across checkouts | Shoppers can compare sites; platforms see where they stand |
 
 ## What the user sees

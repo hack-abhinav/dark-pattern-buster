@@ -49,8 +49,8 @@ def test_ledger_summary_builds_site_profile_and_late_fees():
         "session": "s1", "site": "flycheapo.test", "advertised": 4999, "max_total": 5846, "saved": 648,
         "lines": [{"item": "Convenience fee", "amount": 199, "step": "Payment", "origin": "unknown", "outcome": "kept"}],
         "findings": [
-            {"pattern": "basket_sneaking", "cost": 349, "confidence": "high"},
-            {"pattern": "basket_sneaking", "cost": 299, "confidence": "high"},
+            {"pattern": "basket_sneaking", "cost": 349, "confidence": "high", "item": "Seat 12A (Window)"},
+            {"pattern": "basket_sneaking", "cost": 299, "confidence": "high", "item": "Travel insurance"},
             {"pattern": "drip_pricing", "cost": 199, "confidence": "high", "item": "Convenience fee"},
         ],
         "late_fees": [{"label": "Convenience fee", "amount": 199}],
@@ -58,6 +58,7 @@ def test_ledger_summary_builds_site_profile_and_late_fees():
     profile = client.post("/ledger-summary", json=summary).json()
     assert profile["checkouts"] == 1
     assert profile["late_fees"] == [{"label": "Convenience fee", "amount": 199}]
+    assert {f["amount"] for f in profile["sneaked_extras"]} == {349, 299}
     assert profile["average_extra"] == 847
     assert profile["fairness_score"] == 55
     assert client.get("/site-info", params={"site": "flycheapo.test"}).json()["checkouts"] == 1
